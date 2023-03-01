@@ -13,11 +13,15 @@
   "author": "Rahul Wadate",
   "license": "ISC",
   "dependencies": {
+    "connect-mongodb-session": "^3.1.1",
     "cookie-parser": "^1.4.6",
     "ejs": "^3.1.8",
     "express": "^4.18.2",
     "express-ejs-layouts": "^2.5.1",
+    "express-session": "^1.17.3",
     "mongodb": "^5.1.0",
-    "mongoose": "^6.10.0"
+    "mongoose": "^6.10.0",
+    "passport": "^0.6.0",
+    "passport-local": "^1.0.0"
   }
 }

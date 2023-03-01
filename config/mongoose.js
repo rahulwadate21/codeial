@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 
 // if you find error conecting to database use this
-mongoose.connect('mongodb://localhost/codeial_development',{
+mongoose.connect('mongodb://127.0.0.1:27017/codeial_development',{
     useNewUrlParser: true,
     useUnifiedTopology: true,
     family: 4,
