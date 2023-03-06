@@ -37,7 +37,7 @@ module.exports.create = function(req, res){
     if (req.body.password != req.body.confirm_password){
         return res.redirect('back');
     }
-
+        console.log(req.body);
     User.findOne({email: req.body.email}, function(err, user){
         if(err){console.log('error in finding user in signing up'); return}
 
@@ -61,7 +61,8 @@ module.exports.createSession = function(req, res){
 }
 
 module.exports.destroySession = function(req, res){
-    req.logout();
-
-    return res.redirect('/');
+    req.logout(function(err) {
+        if (err) { return next(err); }
+        res.redirect('/');
+      });
 }
