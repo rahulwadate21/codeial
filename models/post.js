@@ -1,22 +1,26 @@
-const { Timestamp } = require('mongodb');
 const mongoose = require('mongoose');
+
+
 const postSchema = new mongoose.Schema({
-    content:{
+    content: {
         type: String,
-        require: true
+        required: true
     },
-    user:{
-       type: mongoose.Schema.Types.ObjectId,
-       ref: 'User'
-     },
-     comments:[
+    user: {
+        type:  mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+
+    },
+    // include the array of ids of all comments in this post schema itself
+    comments: [
         {
-            type: mongoose.Schema.Types.ObjectId,
+            type:  mongoose.Schema.Types.ObjectId,
             ref: 'Comment'
         }
     ]
-    },{
-        timestamps:true
-    })
-    const Post = mongoose.model('Post', postSchema);
-    module.exports = Post;
+},{
+    timestamps: true
+});
+
+const Post = mongoose.model('Post', postSchema);
+module.exports = Post;
