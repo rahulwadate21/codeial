@@ -1,47 +1,43 @@
-const passport = require('passport');
-const googleStrategy = require('passport-google-oauth').OAuth2Strategy;
-const crypto = require('crypto');
-const User = require('../models/user');
+const passport = require("passport");
+const GoogleStrategy = require("passport-google-oauth").OAuth2Strategy;
+const crypto = require("crypto");
+const Users = require("./../models/users");
+const env = require("./environment");
 
-// tell passport to use a new Strategy for google login
-passport.use(new googleStrategy({
-        clientID:"610938801320-nfsppr585h7q3fdb6l0ov45f06lm2hfo.apps.googleusercontent.com",
-        clientSecret:"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",
-        callbackURL:"https://localhost:8000/users/auth/google/callback"
 
-    },
-    
-    function(accessToken, refreshToken, profile,done){
-        // find a user
-        User.findOne({
-            email: profile.emails[0].value}).exec(function(err,user){
-                if(err){
-                    console.log('ERROR in google strategy-passport', err);
-                    return;
-                }
-                console.log(profile);
-                if(user){
-                    // if found set the user as req.user
-                    return done(null,user);
-                }
-                else{
-                    // if not found, create the user and set it as req.user
-                    User.create({
-                        name: profile.displayName,
-                        email:profile.emails,
-                        password:crypto.randomBytes(20).toString('hex')
-                    },
-                        function(err,user) {
-                            if(err){
-                                console.log('error in creating user google Strategy-passport',err);
-                                return;
-                            }
-                            return done(null,user);
-                        });
-                    }
-            
-            });
-        }
-));
+passport.use(new GoogleStrategy({
+    clientID : env.google_client_id,
+    clientSecret : env.google_client_secret,
+    callbackURL : env.google_callback_url
+  },function(accessToken , refreshToken , profile , done){
+      Users.findOne({email:profile.emails[0].value}).exec(function(error,user){
+          if(error){
+              console.log("Error in finding user");
+              return;
+          }
+
+          console.log(profile);
+          //if found user set it in request.user
+          if(user){
+              return done(null , user);
+          }else{
+              //if not found in user then create and then set it in request.user
+              Users.create({
+                  name:profile.displayName,
+                  email:profile.emails[0].value,
+                  password:crypto.randomBytes(20).toString("hex")
+              } , function(error , user){
+                  if(error){
+                      console.log("error in creating user");
+                      return;
+                  }else{
+                      return done(null , user);
+                      
+                  }
+              })
+          }
+      })
+  })
+)
 
 module.exports = passport;

@@ -1,77 +1,57 @@
-const Post = require('../models/post');
-const Comment = require('../models/comment');
-const Like = require('../models/like');
+const Posts = require("../models/posts");
+const Comments = require("../models/comments");
+const Likes = require("../models/likes");
 
-module.exports.create = async function(req, res){
-    try{
-        let post = await Post.create({
-            content: req.body.content,
-            user: req.user._id
+module.exports.addPost = async function (request, response) {
+  try {
+    let post = await Posts.create({
+      content: request.body.content,
+      user: request.user._id,
+    });
+
+    post = await post.populate("user", "name").execPopulate();
+
+    if (request.xhr) {
+      return response.status(200).json({
+        post: post,
+        message: "Post Created",
+      });
+    }
+    //Coomented these two lines when added the above AJAX
+    // request.flash("successs" , "Post Created Successfully");
+    // return response.redirect("back");
+  } catch (error) {
+    request.flash("error", error);
+    return response.redirect("back");
+  }
+};
+
+module.exports.deletePost = async function (request, response) {
+  try {
+    let post = await Posts.findById(request.params.id);
+    console.log(post);
+
+    if (post.user == request.user.id) {
+      await Likes.deleteMany({ likeable: post, onModel: "Posts" });
+      await Likes.deleteMany({ likeable: { $in: post.comments } });
+
+      //console.log("post", post);
+      post.remove();
+      let comments = await Comments.deleteMany({ post: request.params.id });
+
+      if (request.xhr) {
+        return response.status(200).json({
+          post_id: request.params.id,
+          message: "Post Deleted",
         });
-        
-        if (req.xhr){
-            // if we want to populate just the name of the user (we'll not want to send the password in the API), this is how we do it!
-            post = await post.populate('user', 'name').execPopulate();
-
-            return res.status(200).json({
-                data: {
-                    post: post
-                },
-                message: "Post created!"
-            });
-        }
-
-        req.flash('success', 'Post published!');
-        return res.redirect('back');
-
-    }catch(err){
-        req.flash('error', err);
-        // added this to view the error on console as well
-        console.log(err);
-        return res.redirect('back');
+      }
+      request.flash("successs", "Post Deleted Successfully");
+       return response.redirect("back");
+    } else {
+      return response.redirect("back");
     }
-  
-}
-
-
-module.exports.destroy = async function(req, res){
-
-    try{
-        let post = await Post.findById(req.params.id);
-
-        if (post.user == req.user.id){
-
-            // CHANGE :: delete the associated likes for the post and all its comments' likes too
-            await Like.deleteMany({likeable: post, onModel: 'Post'});
-            await Like.deleteMany({_id: {$in: post.comments}});
-
-
-
-            post.remove();
-
-            await Comment.deleteMany({post: req.params.id});
-
-
-            if (req.xhr){
-                return res.status(200).json({
-                    data: {
-                        post_id: req.params.id
-                    },
-                    message: "Post deleted"
-                });
-            }
-
-            req.flash('success', 'Post and associated comments deleted!');
-
-            return res.redirect('back');
-        }else{
-            req.flash('error', 'You cannot delete this post!');
-            return res.redirect('back');
-        }
-
-    }catch(err){
-        req.flash('error', err);
-        return res.redirect('back');
-    }
-    
-}
+  } catch (error) {
+    console.log("Error", error);
+    return;
+  }
+};

@@ -1,46 +1,89 @@
-<link rel="stylesheet" href="/css/home.css">
+<link
+  type="text/css"
+  rel="stylesheet"
+  href="<%= assetPath('css/home.css') %>"
+/>
 
-<div id="home-container">
-    <section id="feed-posts">
-            <h4>Posts</h4>
-            <% if(locals.user){ %>
-            <form action="/posts/create" id="new-post-form" method="POST">
-                <textarea name="content" cols="30" rows="3" placeholder="Type Here..." required></textarea>
-                <input type="submit" value="Post">
-            </form>
+<div class="home">
+  <div class="feed">
+    <% if(locals.user){ %>
+    <div class="create-post">
+      <form id="post-form" action="/posts/add-post" method="POST">
+        <textarea
+          class="add-post"
+          name="content"
+          placeholder="Type Here.."
+          required
+        ></textarea>
+        <input id="add-post-btn" type="submit" value="Post" />
+      </form>
+    </div>
+    <% } %>
+    <div id="posts-list-container" class="posts-list">
+      <% for(i of posts){ %> <%- include("_posts") -%> <% } %>
+    </div>
+  </div>
+
+  <% if(locals.user) { %>
+  <div class="friends-list">
+    <div class="header">Friends</div>
+    <% if(locals.user.friends.length == 0) {%>
+    <div class="no-friends">No friends found!</div>
+    <% }else{ %> <% for(friends of locals.user.friends){ %> <%
+    if(friends.from_user.id == locals.user.id) {%>
+    <div>
+      <a class="friends-item" href="/users/profile?id=<%=friends.to_user._id%>">
+        <div class="friends-img">
+          <% if(friends.to_user.avtar == undefined){ %>
+            <img
+            class="rounded-circle" id="user-dp"
+            src="https://image.flaticon.com/icons/svg/2154/2154651.svg"
+            alt="logo"
+          />
+            <% }else{%>
+              <img
+              class="rounded-circle" id="user-dp"
+              src="<%= locals.user.avtar %>"
+              alt="logo"
+            />
             <% } %>
-        
-            <div id="posts-list-container">
-                <ul>
-                    <% for(post of posts){ %>
-                        
-                    <%- include('_post') -%>
-                        
-                    <%} %>
-                </ul>
-            </div>
-        </section>
-        
-        
-        <section id="user-friends">
-            <h4>Friends</h4>
-            <% for(u of all_users){%>
-                <p>
-                    <a href="/users/profile/<%= u.id %>"><%= u.name %></a>
-                </p>
+        </div>
+        <div class="friends-name"><%= friends.to_user.name %></div>
+      </a>
+    </div>
+    <%}%> <% if(friends.to_user.id == locals.user.id) {%>
+    <div>
+      <a class="friends-item" href="/users/profile?id=<%=friends.from_user._id%>">
+        <div class="friends-img">
+          <% if(friends.from_user.avtar == undefined){ %>
+            <img
+            class="rounded-circle" id="user-dp"
+            src="https://image.flaticon.com/icons/svg/2154/2154651.svg"
+            alt="logo"
+          />
+            <% }else{%>
+              <img
+              class="rounded-circle" id="user-dp"
+              src="<%= locals.user.avtar %>"
+              alt="logo"
+            />
             <% } %>
-        </section>
+        </div>
+        <div class="friends-name"><%= friends.from_user.name %></div>
+      </a>
+    </div>
+    <% } %> <% } %> <% } %>
+  </div>
+  <% } %> <%- include("_chat_box") %>
 </div>
 
-<!-- importing this script for creating the comments -->
-<script src="/js/home_post_comments.js" ></script>
-<script src="/js/home_posts.js"></script>
-
-<!-- CHANGE :: import the script file for toggle likes, also run it over for the already present posts and comments on the page -->
-<script src="js/toggle_likes.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script>
+<script src="<%= assetPath('javascript/chat_engine.js') %>"></script>
+<% if(locals.user) {%>
 <script>
-    $('.toggle-like-button').each(function(){
-        let self = this;
-        let toggleLike = new ToggleLike(self);
-    });
+  new ChatEngine("user-chat-box", "<%= locals.user.email %>");
 </script>
+<% } %>
+<script src="<%= assetPath('javascript/home_posts.js') %>"></script>
+<script src="<%= assetPath('javascript/posts_comments.js') %>"></script>
+<script src="<%= assetPath('javascript/toggle-likes.js') %>"></script>

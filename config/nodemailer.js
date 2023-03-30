@@ -1,37 +1,27 @@
 const nodemailer = require("nodemailer");
-const ejs = require('ejs');
-const path = require('path')
+const ejs = require("ejs");
+const path = require("path");
+const env = require("./environment");
 
+let transporter = nodemailer.createTransport(env.smtp);
 
-let transporter = nodemailer.createTransport({
-    service: 'gmail',
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false,
-    auth: {
-      user: 'rahulwadate21@gmail.com', // generated gmail user
-      pass: 'Rahul@21', // generated gmail password
-    }
-  });
+ let renderTemplate = function(data , relativePath){
 
- 
-let renderTemplate = (data, relativePath) => {
-  let mailHTML;
-  ejs.renderFile(
-      path.join(__dirname, '../views/mailers', relativePath),
-      data,
-      function(err, template){
-       if (err){console.log('error in rendering template', err); return}
-       
-       mailHTML = template;
-      }
-  )
+    let mailHtml;
+    ejs.renderFile(
+        path.join(__dirname , "../views/mailer" , relativePath),
+        data,
+        function(error , template){
+            if(error){console.log("Error in returning template",error);return}
 
-  return mailHTML;
-}
+            console.log(__dirname);
+            mailHtml = template;
+        }
+    )
+    return mailHtml;
+ }
 
-
-module.exports = {
-  transporter: transporter,
-  renderTemplate: renderTemplate
-}
+ module.exports = {
+     transporter : transporter,
+     renderTemplate : renderTemplate
+ }

@@ -1,65 +1,66 @@
-const Like = require("../models/like");
-const Post =  require("../models/post");
-const Comment = require('../models/comment');
+const Likes = require("../models/likes");
+const Comments = require("../models/comments");
+const Posts = require("../models/posts");
 
+module.exports.toggleLike = async function(request , response){
 
-module.exports.toggleLike = async function(req, res){
     try{
+        
+        let likeableType , deleted = false;
+        let type='';
 
-        // likes/toggle/?id=abcdef&type=Post
-        let likeable;
-        let deleted = false;
-
-
-        if (req.query.type == 'Post'){
-            likeable = await Post.findById(req.query.id).populate('likes');
+        if(request.query.type == "Posts"){
+            likeableType = await Posts.findById(request.query.id).populate("likes");
+            type='Posts'
         }else{
-            likeable = await Comment.findById(req.query.id).populate('likes');
+            likeableType = await Comments.findById(request.query.id).populate("likes");
+            type='Comments'
         }
 
+        let existingLike = await Likes.findOne({
+            likeable : request.query.id,
+            onModel : request.query.type,
+            user : request.user
+        });
 
-        // check if a like already exists
-        let existingLike = await Like.findOne({
-            likeable: req.query.id,
-            onModel: req.query.type,
-            user: req.user._id
-        })
-
-        // if a like already exists then delete it
-        if (existingLike){
-            likeable.likes.pull(existingLike._id);
-            likeable.save();
-
+        if(existingLike){
+            likeableType.likes.pull(existingLike._id);
+            likeableType.save();
             existingLike.remove();
             deleted = true;
-
         }else{
-            // else make a new like
+            let newLike = await Likes.create({
+                user : request.user,
+                likeable : request.query.id,
+                onModel : request.query.type
+            })
 
-            let newLike = await Like.create({
-                user: req.user._id,
-                likeable: req.query.id,
-                onModel: req.query.type
-            });
-
-            likeable.likes.push(newLike._id);
-            likeable.save();
-
+            likeableType.likes.push(newLike);
+            likeableType.save();
+            deleted = false;
         }
 
-        return res.json(200, {
-            message: "Request successful!",
-            data: {
-                deleted: deleted
-            }
+        if(request.xhr){
+            return response.status(200).json({
+                type:type,
+                deleted : deleted , 
+                likeableType : likeableType,
+                message : "Request Successful"
+            });
+        }
+
+            // return response.json(200 ,  {
+            //     deleted : deleted ,
+            //     message : "Request Successful"
+            // })
+        return response.redirect('back');
+            
+    }catch(error){
+
+        console.log("Error : " , error);
+
+        return response.json(500 , {
+            message : "Internal Server Error"
         })
-
-
-
-    }catch(err){
-        console.log(err);
-        return res.json(500, {
-            message: 'Internal Server Error'
-        });
     }
 }
